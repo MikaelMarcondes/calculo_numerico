@@ -46,7 +46,7 @@ void pesos();/*
 
 int main(){
 	int i=0;
-	double a, b;
+	
 	printf("\nMetodo do trapezio:\n");
 	for(i=0; i<21; i++) printf("%d	%20.18lf \n", i, trapezio(0, N1, i));
 	
