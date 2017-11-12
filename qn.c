@@ -12,6 +12,8 @@
 #define	N1	0.9083010
 #define	N2	0.9302351
 
+/*O valor que aceitaremos como verdadeiro é erf(0.9083010)=0.8010439833335538565543.*/
+
 /*Variáveis globais*/
 
 /*Vetores a serem usados na quadratura por Gauss-Legendre*/
@@ -176,3 +178,9 @@ void pesos(){
 		weights[i]=2/((1-pow(roots[i], 2))*pow(d_legendre_15(roots[i]), 2));
 	}
 }*/
+/*Alguns links utilizados:
+
+http://www.wolframalpha.com/widgets/view.jsp?id=6c23cf54347d8e2dda52f41a918efb43
+http://keisan.casio.com/exec/system/1180573449
+https://www.advanpix.com/2011/11/07/gauss-kronrod-quadrature-nodes-weights
+https://pomax.github.io/bezierinfo/legendre-gauss.html*/
