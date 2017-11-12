@@ -7,36 +7,47 @@
 #include <stdlib.h>
 #include <math.h>
 
-/*Constantes definidas para serem usadas*/
+/*Constantes recorrentes*/
 
 #define	N1	0.9083010
 #define	N2	0.9302351
 
 /*Variáveis globais*/
 
-float roots[15]={-0.987992518020485,-0.937273392400706,-0.848206583410427,-0.724417731360170,-0.570972172608539,-0.394151347077563,-0.201194093997434,0,0.201194093997434,0.394151347077563,0.570972172608539,0.724417731360170,0.848206583410427,0.937273392400706,0.987992518020485};	//zeros do polinômio de Legendre de ordem 15
+/*Vetores a serem usados na quadratura por Gauss-Legendre*/
 
-float weights[15]={0.0307532419961173,0.0703660474881081,0.1071592204671720,0.1395706779261540,0.1662692058169940,0.1861610000155620,0.1984314853271120,0.2025782419255610,0.1984314853271120,0.1861610000155620,0.1662692058169940,0.1395706779261540,0.1071592204671720,0.0703660474881081,0.0307532419961173};
+double roots[15]={-0.987992518020485,-0.937273392400706,-0.848206583410427,-0.724417731360170,-0.570972172608539,-0.394151347077563,-0.201194093997434,0,0.201194093997434,0.394151347077563,0.570972172608539,0.724417731360170,0.848206583410427,0.937273392400706,0.987992518020485};
+
+double weights[15]={0.0307532419961173,0.0703660474881081,0.1071592204671720,0.1395706779261540,0.1662692058169940,0.1861610000155620,0.1984314853271120,0.2025782419255610,0.1984314853271120,0.1861610000155620,0.1662692058169940,0.1395706779261540,0.1071592204671720,0.0703660474881081,0.0307532419961173};
+
+/*Vetores a serem usados na quadratura por Gauss-Kronrod*/
+
+double abcissas_G_7[7]={0.949107912342759,0.741531185599394,0.405845151377397,0,-0.405845151377397,-0.741531185599394,-0.949107912342759};
+double abcissas_K_15[15]={0.991455371120813,0.949107912342759,0.864864423359769,0.741531185599394,0.586087235467691,0.405845151377397,0.207784955007898,0,-0.207784955007898,-0.405845151377397,-0.586087235467691,-0.741531185599394,-0.864864423359769,-0.949107912342759,-0.991455371120813};
+double pesos_G_7[7]={0.129484966168870,0.279705391489277,0.381830050505119,0.417959183673469,0.381830050505119,0.279705391489277,0.129484966168870};
+double pesos_K_15[15]={0.022935322010529,0.063092092629979,0.104790010322250,0.140653259715525,0.169004726639267,0.190350578064785,0.204432940075298,0.209482141084728,0.204432940075298,0.190350578064785,0.169004726639267,0.140653259715525,0.104790010322250,0.063092092629979,0.022935322010529};
 
 /*Protótipos de funções usadas ao longo do programa*/
 
-float trapezio(float x1, float x2, int p);
-float simpson(float x1, float x3, int p);
-float gauss_quad(float x[15]);
+double trapezio(double x1, double x2, int p);
+double simpson(double x1, double x3, int p);
+double gauss_legendre();
+void gauss_kronrod();
 
-float f(float x);
-float d_legendre_15(float x);
-float legendre_15(float x);
+double f(double x);
+void raiz(double x[15]);
 
-void raiz(float x[15]);
+double legendre_15(double x);
 void teste();
-void pesos();
+
+/*double d_legendre_15(double x);
+void pesos();/*
 
 /*Programa principal*/
 
 int main(){
 	int i=0;
-	
+	double a, b;
 	printf("\nMetodo do trapezio:\n");
 	for(i=0; i<21; i++) printf("%d	%20.18lf \n", i, trapezio(0, N1, i));
 	
@@ -44,15 +55,17 @@ int main(){
 	for(i=0; i<7; i++) printf("%d	%20.18lf \n", i, simpson(0, N1, i));
 	
 	printf("\nMetodo da quadratura de Gauss-Legendre:\n");
-	raiz(roots);
-	printf("erf(%lf)=%20.18lf\n", N1, gauss_quad(roots));
+	printf("erf(%lf)=%20.18lf\n", N1, gauss_legendre());
 	
+	printf("\nMetodo da quadratura de Gauss-Kronrod:\n");
+	gauss_kronrod();
+
 	return 0;
 }
 
-float trapezio(float x1, float x2, int p){
+double trapezio(double x1, double x2, int p){
 	int i=0;
-	float I, L;
+	double I, L;
 	I=0;
 	L=(x2-x1)/pow(2, p+1);
 	for(i=0, x2=x1+L; i<pow(2, p+1); i++){
@@ -63,9 +76,9 @@ float trapezio(float x1, float x2, int p){
 	return I;
 }
 
-float simpson(float x1, float x3, int p){
+double simpson(double x1, double x3, int p){
 	int i=0;
-	float I, L, x2;
+	double I, L, x2;
 	I=0;
 	L=(x3-x1)/(2*(pow(3, p)));
 	for(i=0, x2=x1+L, x3=x1+2*L; i<pow(3, p); i++){
@@ -77,34 +90,48 @@ float simpson(float x1, float x3, int p){
 	return I;
 }
 
-float gauss_quad(float x[15]){
+double gauss_legendre(){
 	int i=0;
-	float I=0;
+	double I=0;
+	raiz(roots);	//refina as raízes previamente escolhidas
 	for(i=0; i<15; i++){
-		I += (weights[i])*exp(-pow((N1/2)*(x[i]+1), 2));
+		I += (weights[i])*exp(-pow((N1/2)*(roots[i]+1), 2));
 	}
 	return (N1*I/sqrt(M_PI));
 }
 
-float f(float x){
+void gauss_kronrod(){
+	int i=0;
+	double I=0;
+	double g_7, k_15;
+	
+	for(i=0; i<7; i++){
+		I += (pesos_G_7[i])*exp(-pow((N1/2)*(abcissas_G_7[i]+1), 2));
+	}
+	g_7=N1*I/sqrt(M_PI);
+	printf("G_7: %20.18lf\n", g_7);
+
+	for(i=0, I=0; i<15; i++){
+		I += (pesos_K_15[i])*exp(-pow((N1/2)*(abcissas_K_15[i]+1), 2));
+	}
+	k_15=N1*I/sqrt(M_PI);
+	printf("K_15: %20.18lf\n", k_15);
+
+	printf("Erro estimado: %20.18lf \n", pow(200*fabs(g_7-k_15), 1.5));
+}
+	
+double f(double x){
 	return ((2/sqrt(M_PI)) * exp(-x*x));
 }
 
-float legendre_15(float x){
-	return (1/2048)*(9694845*pow(x, 15)-35102025*pow(x, 13)+50702925*pow(x, 11)-37182145*pow(x, 9)+14549535*pow(x, 7)-2909907*pow(x, 5)+255255*pow(x, 3)-6435*x);
-}
+/*Refina as raizes do polinômio de Legendre
+de ordem 15 estimadas a partir de valores 
+iniciais fornecidos por tabelas de raízes
+do próprio polinômio*/
 
-float d_legendre_15(float x){
-	return (1/2048)*((15*9694845)*pow(x, 14)-(13*35102025)*pow(x, 12)+(11*50702925)*pow(x, 10)-(9*37182145)*pow(x, 8)+(7*14549535)*pow(x, 6)-(5*2909907)*pow(x, 4)+(3*255255)*pow(x, 2)-6435);
-}
-
-/*Encontra as raizes do polinômio de Legendre
-de ordem 15 a partir de valores iniciais fornecidos
-por tabelas de raízes do próprio polinômio*/
-
-void raiz(float x[15]){
+void raiz(double x[15]){
 	int i, j;
-	float y, a, b;
+	double y, a, b;
 	for(i=0; i<7; i++){
 		y=x[i];
 		a=x[i]-0.005;
@@ -130,18 +157,25 @@ void raiz(float x[15]){
 /*Testa se os zeros da tabela
 são uma boa representação*/
 
+double legendre_15(double x){
+	return (1/2048)*(9694845*pow(x, 15)-35102025*pow(x, 13)+50702925*pow(x, 11)-37182145*pow(x, 9)+14549535*pow(x, 7)-2909907*pow(x, 5)+255255*pow(x, 3)-6435*x);
+}
+
 void teste(){
 	raiz(roots);
 	int i;
 	for(i=0; i<15; i++){
-		printf("legendre_15(%25.23lf)=%25.23lf\n", roots[i], legendre_15(roots[i]));
+		printf("legendre_15(%20.18lf)=%20.18lf\n", roots[i], legendre_15(roots[i]));
 	}
+}
+
+/*double d_legendre_15(double x){
+	return (1/2048)*((15*9694845)*pow(x, 14)-(13*35102025)*pow(x, 12)+(11*50702925)*pow(x, 10)-(9*37182145)*pow(x, 8)+(7*14549535)*pow(x, 6)-(5*2909907)*pow(x, 4)+(3*255255)*pow(x, 2)-6435);
 }
 
 void pesos(){
 	int i;
 	for(i=0; i<15; i++){
-//weights[i]=2/((1-pow(roots[i], 2))*pow(d_legendre_15(roots[i]), 2));
-		printf("%25.23lf\n", pow(d_legendre_15(roots[i]), 2));
+		weights[i]=2/((1-pow(roots[i], 2))*pow(d_legendre_15(roots[i]), 2));
 	}
-}
+}*/
