@@ -37,15 +37,15 @@ void pesos();
 int main(){
 	int i=0;
 	
-	/*printf("\nMetodo do trapezio:\n");
+	printf("\nMetodo do trapezio:\n");
 	for(i=0; i<21; i++) printf("%d	%20.18lf \n", i, trapezio(0, N1, i));
 	
 	printf("\nMetodo de Simpson:\n");
-	for(i=0; i<21; i++) printf("%d	%20.18lf \n", i, simpson(0, N1, i));*/
+	for(i=0; i<7; i++) printf("%d	%20.18lf \n", i, simpson(0, N1, i));
 	
 	printf("\nMetodo da quadratura de Gauss-Legendre:\n");
 	raiz(roots);
-	printf("erf(%lf)=%20.18lf", N1, gauss_quad(roots));
+	printf("erf(%lf)=%20.18lf\n", N1, gauss_quad(roots));
 	
 	return 0;
 }
@@ -141,7 +141,7 @@ void teste(){
 void pesos(){
 	int i;
 	for(i=0; i<15; i++){
-		//weights[i]=2/((1-pow(roots[i], 2))*pow(d_legendre_15(roots[i]), 2));
+//weights[i]=2/((1-pow(roots[i], 2))*pow(d_legendre_15(roots[i]), 2));
 		printf("%25.23lf\n", pow(d_legendre_15(roots[i]), 2));
 	}
 }
