@@ -23,9 +23,11 @@ float weights[15]={0.0307532419961173,0.0703660474881081,0.1071592204671720,0.13
 float trapezio(float x1, float x2, int p);
 float simpson(float x1, float x3, int p);
 float gauss_quad(float x[15]);
+
 float f(float x);
 float d_legendre_15(float x);
 float legendre_15(float x);
+
 void raiz(float x[15]);
 void teste();
 void pesos();
@@ -34,10 +36,17 @@ void pesos();
 
 int main(){
 	int i=0;
+	
+	/*printf("\nMetodo do trapezio:\n");
+	for(i=0; i<21; i++) printf("%d	%20.18lf \n", i, trapezio(0, N1, i));
+	
+	printf("\nMetodo de Simpson:\n");
+	for(i=0; i<21; i++) printf("%d	%20.18lf \n", i, simpson(0, N1, i));*/
+	
+	printf("\nMetodo da quadratura de Gauss-Legendre:\n");
 	raiz(roots);
-	/*for(i=0; i<21; i++)
-		printf("%d	%20.18lf \n", i, simpson(0, N1, i));*/
-	printf("%20.18lf", gauss_quad(roots));
+	printf("erf(%lf)=%20.18lf", N1, gauss_quad(roots));
+	
 	return 0;
 }
 
@@ -71,7 +80,7 @@ float simpson(float x1, float x3, int p){
 float gauss_quad(float x[15]){
 	int i=0;
 	float I=0;
-	for(i=8; i<9; i++){
+	for(i=0; i<15; i++){
 		I += (weights[i])*exp(-pow((N1/2)*(x[i]+1), 2));
 	}
 	return (N1*I/sqrt(M_PI));
