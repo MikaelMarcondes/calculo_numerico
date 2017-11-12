@@ -30,7 +30,7 @@ double pesos_K_15[15]={0.022935322010529,0.063092092629979,0.104790010322250,0.1
 
 double trapezio(double x1, double x2, int p);
 double simpson(double x1, double x3, int p);
-void gauss_legendre();
+double gauss_legendre();
 void gauss_kronrod();
 
 double f(double x);
@@ -41,7 +41,6 @@ void teste();
 
 /*double d_legendre_15(double x);
 void pesos();/*
-
 /*Programa principal*/
 
 int main(){
@@ -89,7 +88,7 @@ double simpson(double x1, double x3, int p){
 	return I;
 }
 
-void gauss_legendre(){
+double gauss_legendre(){
 	int i=0;
 	double I=0;
 	raiz(roots);	//refina as raízes previamente escolhidas
@@ -171,7 +170,6 @@ void teste(){
 /*double d_legendre_15(double x){
 	return (1/2048)*((15*9694845)*pow(x, 14)-(13*35102025)*pow(x, 12)+(11*50702925)*pow(x, 10)-(9*37182145)*pow(x, 8)+(7*14549535)*pow(x, 6)-(5*2909907)*pow(x, 4)+(3*255255)*pow(x, 2)-6435);
 }
-
 void pesos(){
 	int i;
 	for(i=0; i<15; i++){
