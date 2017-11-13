@@ -41,6 +41,8 @@ void raiz(double x[15]);
 double legendre_15(double x);
 void teste();
 
+double transf_linear(double x, double a, double b, double alpha, double beta);
+
 /*double d_legendre_15(double x);
 void pesos();/*
 /*Programa principal*/
@@ -93,9 +95,11 @@ double simpson(double x1, double x3, int p){
 double gauss_legendre(){
 	int i=0;
 	double I=0;
+	double t=0;
 	raiz(roots);	//refina as raízes previamente escolhidas
 	for(i=0; i<15; i++){
-		I += (weights[i])*exp(-pow((N1/2)*(roots[i]+1), 2));
+		t=transf_linear(roots[i])
+		I += (weights[i])*exp(-pow((N1/2)*(t+1), 2));
 	}
 	return (N1*I/sqrt(M_PI));
 }
@@ -167,6 +171,10 @@ void teste(){
 	for(i=0; i<15; i++){
 		printf("legendre_15(%20.18lf)=%20.18lf\n", roots[i], legendre_15(roots[i]));
 	}
+}
+
+double transf_linear(double x, double a, double b, double alpha, double beta){
+	return (((b-a)*x)+(a*beta-b*alpha))/(beta-alpha);
 }
 
 /*double d_legendre_15(double x){
