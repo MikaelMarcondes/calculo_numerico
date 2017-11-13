@@ -11,6 +11,8 @@
 
 #define	N1	0.9083010
 #define	N2	0.9302351
+#define FALSE	0
+#define TRUE	1
 
 /*O valor que aceitaremos como verdadeiro é erf(0.9083010)=0.8010439833335538565543.*/
 
@@ -32,7 +34,7 @@ double pesos_K_15[15]={0.022935322010529,0.063092092629979,0.104790010322250,0.1
 
 double trapezio(double x1, double x2, int p);
 double simpson(double x1, double x3, int p);
-double gauss_legendre();
+double gauss_legendre(int flag, double a, double b, double alpha, double beta);
 void gauss_kronrod();
 
 double f(double x);
@@ -49,6 +51,7 @@ void pesos();/*
 
 int main(){
 	int i=0;
+	double j=0;
 	
 	printf("\nMetodo do trapezio:\n");
 	for(i=0; i<21; i++) printf("%d	%20.18lf \n", i, trapezio(0, N1, i));
@@ -57,11 +60,17 @@ int main(){
 	for(i=0; i<7; i++) printf("%d	%20.18lf \n", i, simpson(0, N1, i));
 	
 	printf("\nMetodo da quadratura de Gauss-Legendre:\n");
-	printf("erf(%lf)=%20.18lf\n", N1, gauss_legendre());
+	printf("erf(%lf)=%20.18lf\n", N1, gauss_legendre(FALSE, 0, 0, 0, 0)); //os valores depois de FALSE são irrelevantes
 	
 	printf("\nMetodo da quadratura de Gauss-Kronrod:\n");
 	gauss_kronrod();
-
+	
+	printf("\nMetodo da quadratura de Gauss-Legendre (refinado):\n");
+	for(i=0; i<4; i++) j += gauss_legendre(TRUE,((-1)+(i/2)),((-1/2)+(i/2)), -1, 1);
+	printf("erf(%lf)=%20.18lf\n", N1, j);
+		
+	printf("\nMetodo da quadratura de Gauss-Kronrod (refinado):\n");
+	
 	return 0;
 }
 
@@ -92,15 +101,17 @@ double simpson(double x1, double x3, int p){
 	return I;
 }
 
-double gauss_legendre(){
+double gauss_legendre(int flag, double a, double b, double alpha, double beta){
 	int i=0;
 	double I=0;
 	double t=0;
 	raiz(roots);	//refina as raízes previamente escolhidas
 	for(i=0; i<15; i++){
-		t=transf_linear(roots[i])
+		if(flag==TRUE) t=transf_linear(roots[i], a, b, alpha, beta);
+		else t=roots[i];
 		I += (weights[i])*exp(-pow((N1/2)*(t+1), 2));
 	}
+	if(flag==TRUE) return (((b-a)/(beta-alpha))*(N1*I/sqrt(M_PI)));
 	return (N1*I/sqrt(M_PI));
 }
 
