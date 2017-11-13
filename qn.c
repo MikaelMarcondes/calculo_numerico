@@ -52,25 +52,25 @@ void pesos();/*
 int main(){
 	int i=0;
 	double j=0;
-	
+
 	printf("\nMetodo do trapezio:\n");
 	for(i=0; i<21; i++) printf("%d	%20.18lf \n", i, trapezio(0, N1, i));
-	
+
 	printf("\nMetodo de Simpson:\n");
 	for(i=0; i<7; i++) printf("%d	%20.18lf \n", i, simpson(0, N1, i));
-	
+
 	printf("\nMetodo da quadratura de Gauss-Legendre:\n");
 	printf("erf(%lf)=%20.18lf\n", N1, gauss_legendre(FALSE, 0, 0, 0, 0)); //os valores depois de FALSE são irrelevantes
-	
+
 	printf("\nMetodo da quadratura de Gauss-Kronrod:\n");
 	gauss_kronrod();
-	
+
 	printf("\nMetodo da quadratura de Gauss-Legendre (refinado):\n");
 	for(i=0; i<4; i++) j += gauss_legendre(TRUE,((-1)+(i/2)),((-1/2)+(i/2)), -1, 1);
 	printf("erf(%lf)=%20.18lf\n", N1, j);
-		
+
 	printf("\nMetodo da quadratura de Gauss-Kronrod (refinado):\n");
-	
+
 	return 0;
 }
 
@@ -119,7 +119,7 @@ void gauss_kronrod(){
 	int i=0;
 	double I=0;
 	double g_7, k_15;
-	
+
 	for(i=0; i<7; i++){
 		I += (pesos_G_7[i])*exp(-pow((N1/2)*(abcissas_G_7[i]+1), 2));
 	}
@@ -134,13 +134,13 @@ void gauss_kronrod(){
 
 	printf("Erro estimado: %20.18lf \n", pow(200*fabs(g_7-k_15), 1.5));
 }
-	
+
 double f(double x){
 	return ((2/sqrt(M_PI)) * exp(-x*x));
 }
 
 /*Refina as raizes do polinômio de Legendre
-de ordem 15 estimadas a partir de valores 
+de ordem 15 estimadas a partir de valores
 iniciais fornecidos por tabelas de raízes
 do próprio polinômio*/
 
