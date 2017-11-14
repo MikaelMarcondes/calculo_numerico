@@ -14,7 +14,7 @@
 #define FALSE	0
 #define TRUE	1
 
-/*O valor que aceitaremos como verdadeiro é erf(0.9083010)=0.8010439833335538565543.*/
+/*O valor que aceitaremos como verdadeiro é erf(0.9083010)=0.80104398333355385655425471455314706359364542054.*/
 
 /*Variáveis globais*/
 
@@ -35,7 +35,7 @@ double pesos_K_15[15]={0.022935322010529,0.063092092629979,0.104790010322250,0.1
 double trapezio(double x1, double x2, int p);
 double simpson(double x1, double x3, int p);
 double gauss_legendre(int flag, double a, double b, double alpha, double beta);
-void gauss_kronrod();
+double gauss_kronrod(int flag, double a, double b, double alpha, double beta, double q[2]);
 
 double f(double x);
 void raiz(double x[15]);
@@ -51,8 +51,9 @@ void pesos();/*
 
 int main(){
 	int i=0;
-	double j=0;
-
+	double j, k;
+	double a[2]={0,0};
+	
 	printf("\nMetodo do trapezio:\n");
 	for(i=0; i<21; i++) printf("%d	%20.18lf \n", i, trapezio(0, N1, i));
 
@@ -63,13 +64,20 @@ int main(){
 	printf("erf(%lf)=%20.18lf\n", N1, gauss_legendre(FALSE, 0, 0, 0, 0)); //os valores depois de FALSE são irrelevantes
 
 	printf("\nMetodo da quadratura de Gauss-Kronrod:\n");
-	gauss_kronrod();
+	gauss_kronrod(FALSE, 0, 0, 0, 0, a);
+	printf("G_7: %20.18lf\nK_15: %20.18lf\n", a[0], a[1]);
 
 	printf("\nMetodo da quadratura de Gauss-Legendre (refinado):\n");
 	for(i=0; i<4; i++) j += gauss_legendre(TRUE,((-1)+(i/2)),((-1/2)+(i/2)), -1, 1);
 	printf("erf(%lf)=%20.18lf\n", N1, j);
 
 	printf("\nMetodo da quadratura de Gauss-Kronrod (refinado):\n");
+	for(i=0, j=0, k=0, a[0]=0, a[1]=0; i<4; i++){
+		gauss_kronrod(TRUE,((-1)+(i/2)),((-1/2)+(i/2)), -1, 1, a);
+		j += a[0];
+		k += a[1];
+	}
+	printf("G_7: %20.18lf\nK_15: %20.18lf\n", j, k);
 
 	return 0;
 }
@@ -105,7 +113,7 @@ double gauss_legendre(int flag, double a, double b, double alpha, double beta){
 	int i=0;
 	double I=0;
 	double t=0;
-	raiz(roots);	//refina as raízes previamente escolhidas
+	if(flag==FALSE) raiz(roots);	//refina as raízes previamente escolhidas
 	for(i=0; i<15; i++){
 		if(flag==TRUE) t=transf_linear(roots[i], a, b, alpha, beta);
 		else t=roots[i];
@@ -115,24 +123,28 @@ double gauss_legendre(int flag, double a, double b, double alpha, double beta){
 	return (N1*I/sqrt(M_PI));
 }
 
-void gauss_kronrod(){
+double gauss_kronrod(int flag, double a, double b, double alpha, double beta, double q[2]){
 	int i=0;
-	double I=0;
-	double g_7, k_15;
+	double I, t;
+	I=t=0;
 
 	for(i=0; i<7; i++){
-		I += (pesos_G_7[i])*exp(-pow((N1/2)*(abcissas_G_7[i]+1), 2));
+		if(flag==TRUE) t=transf_linear(abcissas_G_7[i], a, b, alpha, beta);
+		else t=abcissas_G_7[i];
+		I += (pesos_G_7[i])*exp(-pow((N1/2)*(t+1), 2));
 	}
-	g_7=N1*I/sqrt(M_PI);
-	printf("G_7: %20.18lf\n", g_7);
+	if(flag==TRUE) q[0]=(((b-a)/(beta-alpha))*(N1*I/sqrt(M_PI)));
+	else q[0]=(N1*I/sqrt(M_PI));
 
 	for(i=0, I=0; i<15; i++){
-		I += (pesos_K_15[i])*exp(-pow((N1/2)*(abcissas_K_15[i]+1), 2));
+		if(flag==TRUE) t=transf_linear(abcissas_K_15[i], a, b, alpha, beta);
+		else t=abcissas_K_15[i];
+		I += (pesos_K_15[i])*exp(-pow((N1/2)*(t+1), 2));
 	}
-	k_15=N1*I/sqrt(M_PI);
-	printf("K_15: %20.18lf\n", k_15);
+	if(flag==TRUE) q[1]=(((b-a)/(beta-alpha))*(N1*I/sqrt(M_PI)));
+	else q[1]=(N1*I/sqrt(M_PI));
 
-	printf("Erro estimado: %20.18lf \n", pow(200*fabs(g_7-k_15), 1.5));
+	//printf("Erro estimado: %20.18lf \n", pow(200*fabs(g_7-k_15), 1.5));
 }
 
 double f(double x){
@@ -185,7 +197,7 @@ void teste(){
 }
 
 double transf_linear(double x, double a, double b, double alpha, double beta){
-	return (((b-a)*x)+(a*beta-b*alpha))/(beta-alpha);
+	return ((((b-a)*x)+(a*beta-b*alpha))/(beta-alpha));
 }
 
 /*double d_legendre_15(double x){
