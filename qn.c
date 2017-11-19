@@ -13,6 +13,7 @@
 #define	N2	0.9302351
 #define FALSE	0
 #define TRUE	1
+#define erf_N1  0.80104398333355385655425471455314706359364542054
 
 /*O valor que aceitaremos como verdadeiro é erf(0.9083010)=0.80104398333355385655425471455314706359364542054.*/
 
@@ -20,71 +21,69 @@
 
 /*Vetores de pesos e abcissas a serem usados na quadratura por Gauss-Legendre*/
 
-double roots[15]={-0.987992518020485,-0.937273392400706,-0.848206583410427,-0.724417731360170,-0.570972172608539,-0.394151347077563,-0.201194093997434,0,0.201194093997434,0.394151347077563,0.570972172608539,0.724417731360170,0.848206583410427,0.937273392400706,0.987992518020485};
-double weights[15]={0.0307532419961173,0.0703660474881081,0.1071592204671720,0.1395706779261540,0.1662692058169940,0.1861610000155620,0.1984314853271120,0.2025782419255610,0.1984314853271120,0.1861610000155620,0.1662692058169940,0.1395706779261540,0.1071592204671720,0.0703660474881081,0.0307532419961173};
+float roots[15]={-0.987992518020485,-0.937273392400706,-0.848206583410427,-0.724417731360170,-0.570972172608539,-0.394151347077563,-0.201194093997434,0,0.201194093997434,0.394151347077563,0.570972172608539,0.724417731360170,0.848206583410427,0.937273392400706,0.987992518020485};
+float weights[15]={0.0307532419961173,0.0703660474881081,0.1071592204671720,0.1395706779261540,0.1662692058169940,0.1861610000155620,0.1984314853271120,0.2025782419255610,0.1984314853271120,0.1861610000155620,0.1662692058169940,0.1395706779261540,0.1071592204671720,0.0703660474881081,0.0307532419961173};
 
 /*Vetores de pesos e abcissas a serem usados na quadratura por Gauss-Kronrod*/
 
-double abcissas_G_7[7]={0.949107912342759,0.741531185599394,0.405845151377397,0,-0.405845151377397,-0.741531185599394,-0.949107912342759};
-double abcissas_K_15[15]={0.991455371120813,0.949107912342759,0.864864423359769,0.741531185599394,0.586087235467691,0.405845151377397,0.207784955007898,0,-0.207784955007898,-0.405845151377397,-0.586087235467691,-0.741531185599394,-0.864864423359769,-0.949107912342759,-0.991455371120813};
-double pesos_G_7[7]={0.129484966168870,0.279705391489277,0.381830050505119,0.417959183673469,0.381830050505119,0.279705391489277,0.129484966168870};
-double pesos_K_15[15]={0.022935322010529,0.063092092629979,0.104790010322250,0.140653259715525,0.169004726639267,0.190350578064785,0.204432940075298,0.209482141084728,0.204432940075298,0.190350578064785,0.169004726639267,0.140653259715525,0.104790010322250,0.063092092629979,0.022935322010529};
+float abcissas_G_7[7]={0.949107912342759,0.741531185599394,0.405845151377397,0,-0.405845151377397,-0.741531185599394,-0.949107912342759};
+float abcissas_K_15[15]={0.991455371120813,0.949107912342759,0.864864423359769,0.741531185599394,0.586087235467691,0.405845151377397,0.207784955007898,0,-0.207784955007898,-0.405845151377397,-0.586087235467691,-0.741531185599394,-0.864864423359769,-0.949107912342759,-0.991455371120813};
+float pesos_G_7[7]={0.129484966168870,0.279705391489277,0.381830050505119,0.417959183673469,0.381830050505119,0.279705391489277,0.129484966168870};
+float pesos_K_15[15]={0.022935322010529,0.063092092629979,0.104790010322250,0.140653259715525,0.169004726639267,0.190350578064785,0.204432940075298,0.209482141084728,0.204432940075298,0.190350578064785,0.169004726639267,0.140653259715525,0.104790010322250,0.063092092629979,0.022935322010529};
 
 /*Protótipos de funções usadas ao longo do programa*/
 
-double trapezio(double x1, double x2, int p);
-double simpson(double x1, double x3, int p);
-double gauss_legendre(int flag, double a, double b, double alpha, double beta);
-double gauss_kronrod(int flag, double a, double b, double alpha, double beta, double q[2]);
+float trapezio(float x1, float x2, int p);
+float simpson(float x1, float x3, int p);
+float gauss_legendre(int flag);
+float gauss_kronrod(int flag, float q[2]);
 
-double f(double x);
-void raiz(double x[15]);
+float f(float x);
+void raiz(float x[15]);
 
-double legendre_15(double x);
+float legendre_15(float x);
 void teste();
 
-double transf_linear(double x, double a, double b, double alpha, double beta);
+float transf_linear(float x, float a, float b, float alpha, float beta);
 
-/*double d_legendre_15(double x);
+/*float d_legendre_15(float x);
 void pesos();/*
 /*Programa principal*/
 
 int main(){
-	int i=0;
-	double j, k;
-	double a[2]={0,0};
-	
+	int h, i;
+	h=i=0;
+	float j, k;
+	float a[2]={0,0};
+
+    printf("Valor aceito\nerf(%9.7f)=%20.18f\n\n", N1, erf_N1);
+
 	printf("\nMetodo do trapezio:\n");
-	for(i=0; i<21; i++) printf("%d	%20.18lf \n", i, trapezio(0, N1, i));
+	for(i=0; i<21; i++) printf("%d      %20.18f     %20.18f\n", i, trapezio(0, N1, i), pow(N1/pow(2, i+1), 3));
 
 	printf("\nMetodo de Simpson:\n");
-	for(i=0; i<7; i++) printf("%d	%20.18lf \n", i, simpson(0, N1, i));
+	for(i=0; i<7; i++) printf("%d       %20.18f     %20.18f\n", i, simpson(0, N1, i), pow(N1/(2*(pow(3, i))), 5));
 
 	printf("\nMetodo da quadratura de Gauss-Legendre:\n");
-	printf("erf(%lf)=%20.18lf\n", N1, gauss_legendre(FALSE, 0, 0, 0, 0)); //os valores depois de FALSE são irrelevantes
+	printf("erf(%lf)=%20.18f\n", N1, gauss_legendre(FALSE));
 
 	printf("\nMetodo da quadratura de Gauss-Kronrod:\n");
-	gauss_kronrod(FALSE, 0, 0, 0, 0, a);
-	printf("G_7: %20.18lf\nK_15: %20.18lf\n", a[0], a[1]);
+	gauss_kronrod(FALSE, a);
+	printf("G_7: %20.18f\nK_15: %20.18lf\n", a[0], a[1]);
 
 	printf("\nMetodo da quadratura de Gauss-Legendre (refinado):\n");
-	for(i=0; i<4; i++) j += gauss_legendre(TRUE,((-1)+(i/2)),((-1/2)+(i/2)), -1, 1);
-	printf("erf(%lf)=%20.18lf\n", N1, j);
+    printf("erf(%9.7f)=%20.18f\n", N1, gauss_legendre(TRUE));
 
 	printf("\nMetodo da quadratura de Gauss-Kronrod (refinado):\n");
-	for(i=0, j=0, k=0, a[0]=0, a[1]=0; i<4; i++){
-		gauss_kronrod(TRUE,((-1)+(i/2)),((-1/2)+(i/2)), -1, 1, a);
-		j += a[0];
-		k += a[1];
-	}
-	printf("G_7: %20.18lf\nK_15: %20.18lf\n", j, k);
+    gauss_kronrod(TRUE, a);
+	printf("G_7: %20.18f\nK_15: %20.18lf\n", a[0], a[1]);
 
 	return 0;
 }
 
-double trapezio(double x1, double x2, int p){
+float trapezio(float x1, float x2, int p){
 	int i=0;
-	double I, L;
+	float I, L;
 	I=0;
 	L=(x2-x1)/pow(2, p+1);
 	for(i=0, x2=x1+L; i<pow(2, p+1); i++){
@@ -95,9 +94,9 @@ double trapezio(double x1, double x2, int p){
 	return I;
 }
 
-double simpson(double x1, double x3, int p){
+float simpson(float x1, float x3, int p){
 	int i=0;
-	double I, L, x2;
+	float I, L, x2;
 	I=0;
 	L=(x3-x1)/(2*(pow(3, p)));
 	for(i=0, x2=x1+L, x3=x1+2*L; i<pow(3, p); i++){
@@ -109,45 +108,48 @@ double simpson(double x1, double x3, int p){
 	return I;
 }
 
-double gauss_legendre(int flag, double a, double b, double alpha, double beta){
-	int i=0;
-	double I=0;
-	double t=0;
+float gauss_legendre(int flag){
+	int i,j;
+	float I;
 	if(flag==FALSE) raiz(roots);	//refina as raízes previamente escolhidas
-	for(i=0; i<15; i++){
-		if(flag==TRUE) t=transf_linear(roots[i], a, b, alpha, beta);
-		else t=roots[i];
-		I += (weights[i])*exp(-pow((N1/2)*(t+1), 2));
-	}
-	if(flag==TRUE) return (((b-a)/(beta-alpha))*(N1*I/sqrt(M_PI)));
-	return (N1*I/sqrt(M_PI));
+    if(flag==TRUE){
+        for(j=0, I=0; j<15; j++)
+            for(i=0; i<4; i++) I += weights[j]*exp(-pow(((N1/8)*(roots[j]+2*i+1)), 2));
+        return (N1*I)/(4*sqrt(M_PI));
+    }
+    else{
+        for(i=0, I=0; i<15; i++) I += (weights[i])*exp(-pow((N1/2)*(roots[i]+1), 2));
+        return (N1*I/sqrt(M_PI));
+    }
 }
 
-double gauss_kronrod(int flag, double a, double b, double alpha, double beta, double q[2]){
-	int i=0;
-	double I, t;
-	I=t=0;
+float gauss_kronrod(int flag, float q[2]){
+	int i, j;
+	float I;
 
-	for(i=0; i<7; i++){
-		if(flag==TRUE) t=transf_linear(abcissas_G_7[i], a, b, alpha, beta);
-		else t=abcissas_G_7[i];
-		I += (pesos_G_7[i])*exp(-pow((N1/2)*(t+1), 2));
-	}
-	if(flag==TRUE) q[0]=(((b-a)/(beta-alpha))*(N1*I/sqrt(M_PI)));
-	else q[0]=(N1*I/sqrt(M_PI));
+    q[0]=0;
+    q[1]=0;
 
-	for(i=0, I=0; i<15; i++){
-		if(flag==TRUE) t=transf_linear(abcissas_K_15[i], a, b, alpha, beta);
-		else t=abcissas_K_15[i];
-		I += (pesos_K_15[i])*exp(-pow((N1/2)*(t+1), 2));
-	}
-	if(flag==TRUE) q[1]=(((b-a)/(beta-alpha))*(N1*I/sqrt(M_PI))); //(b-a)/(beta-alpha)=1/4
-	else q[1]=(N1*I/sqrt(M_PI));
+	if(flag==TRUE){
+        for(j=0, I=0; j<7; j++)
+            for(i=0; i<4; i++) I += pesos_G_7[j]*exp(-pow(((N1/8)*(abcissas_G_7[j]+2*i+1)), 2));
+        q[0]=(N1*I)/(4*sqrt(M_PI));
+        for(j=0, I=0; j<15; j++)
+            for(i=0; i<4; i++) I += pesos_K_15[j]*exp(-pow(((N1/8)*(abcissas_K_15[j]+2*i+1)), 2));
+        q[1]=(N1*I)/(4*sqrt(M_PI));
+    }
+
+    else{
+        for(i=0, I=0; i<7; i++) I += (pesos_G_7[i])*exp(-pow((N1/2)*(abcissas_G_7[i]+1), 2));
+        q[0]=(N1*I/sqrt(M_PI));
+        for(i=0, I=0; i<15; i++) I += (pesos_K_15[i])*exp(-pow((N1/2)*(abcissas_K_15[i]+1), 2));
+        q[1]=(N1*I/sqrt(M_PI));
+    }
 
 	//printf("Erro estimado: %20.18lf \n", pow(200*fabs(g_7-k_15), 1.5));
 }
 
-double f(double x){
+float f(float x){
 	return ((2/sqrt(M_PI)) * exp(-x*x));
 }
 
@@ -156,9 +158,9 @@ de ordem 15 estimadas a partir de valores
 iniciais fornecidos por tabelas de raízes
 do próprio polinômio*/
 
-void raiz(double x[15]){
+void raiz(float x[15]){
 	int i, j;
-	double y, a, b;
+	float y, a, b;
 	for(i=0; i<7; i++){
 		y=x[i];
 		a=x[i]-0.005;
@@ -184,7 +186,7 @@ void raiz(double x[15]){
 /*Testa se os zeros da tabela
 são uma boa representação*/
 
-double legendre_15(double x){
+float legendre_15(float x){
 	return (1/2048)*(9694845*pow(x, 15)-35102025*pow(x, 13)+50702925*pow(x, 11)-37182145*pow(x, 9)+14549535*pow(x, 7)-2909907*pow(x, 5)+255255*pow(x, 3)-6435*x);
 }
 
@@ -196,11 +198,11 @@ void teste(){
 	}
 }
 
-double transf_linear(double x, double a, double b, double alpha, double beta){
+float transf_linear(float x, float a, float b, float alpha, float beta){
 	return ((((b-a)*x)+(a*beta-b*alpha))/(beta-alpha));
 }
 
-/*double d_legendre_15(double x){
+/*float d_legendre_15(float x){
 	return (1/2048)*((15*9694845)*pow(x, 14)-(13*35102025)*pow(x, 12)+(11*50702925)*pow(x, 10)-(9*37182145)*pow(x, 8)+(7*14549535)*pow(x, 6)-(5*2909907)*pow(x, 4)+(3*255255)*pow(x, 2)-6435);
 }
 void pesos(){
