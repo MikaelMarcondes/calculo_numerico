@@ -34,20 +34,15 @@ float pesos_K_15[15]={0.022935322010529,0.063092092629979,0.104790010322250,0.14
 /*Protótipos de funções usadas ao longo do programa*/
 
 float trapezio(float x1, float x2, int p);
-float simpson(float x1, float x3, int p);
+void simpson(float x1, float x3, int p);
 float gauss_legendre(int flag);
 float gauss_kronrod(int flag, float q[2]);
 
-float f(float x);
 void raiz(float x[15]);
 
 float legendre_15(float x);
 void teste();
 
-float transf_linear(float x, float a, float b, float alpha, float beta);
-
-/*float d_legendre_15(float x);
-void pesos();/*
 /*Programa principal*/
 
 int main(){
@@ -56,13 +51,17 @@ int main(){
 	float j, k;
 	float a[2]={0,0};
 
+    /*teste();
+    for(i=0; i<15; i++) printf("%20.18f\n", weights[i]);
+    pesos();*/
+
     printf("Valor aceito\nerf(%9.7f)=%20.18f\n\n", N1, erf_N1);
 
-	printf("\nMetodo do trapezio:\n");
-	for(i=0; i<21; i++) printf("%d      %20.18f     %20.18f\n", i, trapezio(0, N1, i), pow(N1/pow(2, i+1), 3));
+    printf("\nMetodo do trapezio:\n");
+	for(i=0; i<21; i++) trapezio(0, N1, i);
 
 	printf("\nMetodo de Simpson:\n");
-	for(i=0; i<7; i++) printf("%d       %20.18f     %20.18f\n", i, simpson(0, N1, i), pow(N1/(2*(pow(3, i))), 5));
+	for(i=0; i<21; i++) simpson(0, N1, i);
 
 	printf("\nMetodo da quadratura de Gauss-Legendre:\n");
 	printf("erf(%lf)=%20.18f\n", N1, gauss_legendre(FALSE));
@@ -84,28 +83,44 @@ int main(){
 float trapezio(float x1, float x2, int p){
 	int i=0;
 	float I, L;
-	I=0;
-	L=(x2-x1)/pow(2, p+1);
-	for(i=0, x2=x1+L; i<pow(2, p+1); i++){
-		I += (f(x1)+f(x2))*L/2;
-		x1 += L;
-		x2 += L;
-	}
-	return I;
+	L=(x2-x1)/(pow(2, p+1)-1);  //em um segmento com n pontos há n-1 segmentos intermediários
+	I=(exp(-x1*x1)+exp(-x2*x2))/2;
+	for(i=1; i<pow(2, p+1)-1; i++) I += exp(-pow((x1+i*L), 2));
+	I=2*L*I/sqrt(M_PI);
+	printf("%d  %20.18f %30.28f %30.28f\n", p, I, fabs(I-erf_N1), pow(2,-(2*p+2)));
 }
 
-float simpson(float x1, float x3, int p){
+void simpson(float x1, float x3, int p){
 	int i=0;
-	float I, L, x2;
-	I=0;
+	float I, E, L, A, B, C;
 	L=(x3-x1)/(2*(pow(3, p)));
-	for(i=0, x2=x1+L, x3=x1+2*L; i<pow(3, p); i++){
-		I += (f(x1)+4*f(x2)+f(x3))*(L/3);
-		x1 += 2*L;
-		x2 += 2*L;
-		x3 += 2*L;
+    I=exp(-x1*x1)+exp(-x3*x3);
+
+	for(i=1, A=0; i<=pow(3, p); i++)
+        A += exp(-(x1+2*i*L)*(x1+2*i*L));
+    A=2*A;
+
+    for(i=1, B=0, E=0; i<=pow(3, p); i++){
+        C=exp(-(x1+L+2*(i-1)*L)*(x1+L+2*(i-1)*L));
+        E += C*(4*pow(x1+2*(i-1)*L, 4)-12*pow(x1+2*(i-1)*L, 2)+3); //derivada quarta de exp(-x²) no ponto à esquerda
+        B += C;
+    }
+    B=4*B;
+
+    I=I+A+B;
+	I=((2*L*I)/(3*sqrt(M_PI)));
+	E=fabs(8*E*pow(L, 5)/(90*sqrt(M_PI)));
+
+	/*a expressão para o erro está em 25.4.5 do Abramowitz & Stegun;
+	o ponto à esquerda é escolhido porque a derivada quarta é monotônica
+	decrescente em todo intervalo e esse é um erro estimado por cima*/
+
+	//printf("%d   %20.18f %30.28f\n", p, I, E);
+	if(p<16) printf("%d  %20.18f    %30.28f     %30.28f\n", p, I, fabs(I-erf_N1), E);
+	else{
+        I=2*pow(3, p-16)*I;
+        printf("%d  %20.18f    %30.28f     %30.28f\n", p, I, fabs(I-erf_N1), E);
 	}
-	return I;
 }
 
 float gauss_legendre(int flag){
@@ -147,10 +162,6 @@ float gauss_kronrod(int flag, float q[2]){
     }
 
 	//printf("Erro estimado: %20.18lf \n", pow(200*fabs(g_7-k_15), 1.5));
-}
-
-float f(float x){
-	return ((2/sqrt(M_PI)) * exp(-x*x));
 }
 
 /*Refina as raizes do polinômio de Legendre
@@ -198,22 +209,16 @@ void teste(){
 	}
 }
 
-float transf_linear(float x, float a, float b, float alpha, float beta){
-	return ((((b-a)*x)+(a*beta-b*alpha))/(beta-alpha));
-}
-
-/*float d_legendre_15(float x){
-	return (1/2048)*((15*9694845)*pow(x, 14)-(13*35102025)*pow(x, 12)+(11*50702925)*pow(x, 10)-(9*37182145)*pow(x, 8)+(7*14549535)*pow(x, 6)-(5*2909907)*pow(x, 4)+(3*255255)*pow(x, 2)-6435);
-}
-void pesos(){
-	int i;
-	for(i=0; i<15; i++){
-		weights[i]=2/((1-pow(roots[i], 2))*pow(d_legendre_15(roots[i]), 2));
-	}
-}*/
 /*Alguns links utilizados:
 
 http://www.wolframalpha.com/widgets/view.jsp?id=6c23cf54347d8e2dda52f41a918efb43
 http://keisan.casio.com/exec/system/1180573449
 https://www.advanpix.com/2011/11/07/gauss-kronrod-quadrature-nodes-weights
 https://pomax.github.io/bezierinfo/legendre-gauss.html*/
+
+/*Algumas constantes que precisamos calcular no Wolfram Alpha
+
+d^30(exp(-pow(((0.9083010/8)*(x+2*0+1)), 2)))/dx^30 (x=-1)=-9.1486*1E-9  => R_15=−0.992981211E-49
+d^30(exp(-pow(((0.9083010/8)*(x+2*1+1)), 2)))/dx^30 (x=-1)=1.79427×10^-9 =>
+d^30(exp(-pow(((0.9083010/8)*(x+2*2+1)), 2)))/dx^30 (x=-1)=7.5953×10^-9 =>
+d^30(exp(-pow(((0.9083010/8)*(x+2*3+1)), 2)))/dx^30 (x=-1)=-4.11435×10^-9 =>
