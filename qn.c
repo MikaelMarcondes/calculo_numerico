@@ -14,6 +14,8 @@
 #define FALSE	0
 #define TRUE	1
 #define erf_N1  0.80104398333355385655425471455314706359364542054
+#define erro_GL     1.144827473
+#define erro_GLr    4.204133489
 
 /*O valor que aceitaremos como verdadeiro é erf(0.9083010)=0.80104398333355385655425471455314706359364542054.*/
 
@@ -36,7 +38,7 @@ float pesos_K_15[15]={0.022935322010529,0.063092092629979,0.104790010322250,0.14
 float trapezio(float x1, float x2, int p);
 void simpson(float x1, float x3, int p);
 float gauss_legendre(int flag);
-float gauss_kronrod(int flag, float q[2]);
+void gauss_kronrod(int flag);
 
 void raiz(float x[15]);
 
@@ -46,14 +48,10 @@ void teste();
 /*Programa principal*/
 
 int main(){
-	int h, i;
-	h=i=0;
-	float j, k;
-	float a[2]={0,0};
+	int i=0;
+	float j;
 
-    /*teste();
-    for(i=0; i<15; i++) printf("%20.18f\n", weights[i]);
-    pesos();*/
+    /*teste();*/
 
     printf("Valor aceito\nerf(%9.7f)=%20.18f\n\n", N1, erf_N1);
 
@@ -64,18 +62,23 @@ int main(){
 	for(i=0; i<21; i++) simpson(0, N1, i);
 
 	printf("\nMetodo da quadratura de Gauss-Legendre:\n");
-	printf("erf(%lf)=%20.18f\n", N1, gauss_legendre(FALSE));
+	j=gauss_legendre(FALSE);
+    printf("erf(%9.7f)=%20.18f\n", N1, j);
+    printf("Erro absoluto: %20.18f\n", fabs(j-erf_N1));
+    printf("Erro de truncamento: -%fE-31\n", erro_GL); //o cálculo dessa constante se encontra nos comentários ao fim do código
 
 	printf("\nMetodo da quadratura de Gauss-Kronrod:\n");
-	gauss_kronrod(FALSE, a);
-	printf("G_7: %20.18f\nK_15: %20.18lf\n", a[0], a[1]);
+	gauss_kronrod(FALSE);
 
 	printf("\nMetodo da quadratura de Gauss-Legendre (refinado):\n");
-    printf("erf(%9.7f)=%20.18f\n", N1, gauss_legendre(TRUE));
+	j=gauss_legendre(TRUE);
+    printf("erf(%9.7f)=%20.18f\n", N1, j);
+    printf("Erro absoluto: %20.18f\n", fabs(j-erf_N1));
+    printf("Erro de truncamento: -%fE-50\n", erro_GLr); //o cálculo dessa constante se encontra nos comentários ao fim do código
 
 	printf("\nMetodo da quadratura de Gauss-Kronrod (refinado):\n");
-    gauss_kronrod(TRUE, a);
-	printf("G_7: %20.18f\nK_15: %20.18lf\n", a[0], a[1]);
+    gauss_kronrod(TRUE);
+
 
 	return 0;
 }
@@ -138,20 +141,33 @@ float gauss_legendre(int flag){
     }
 }
 
-float gauss_kronrod(int flag, float q[2]){
+void gauss_kronrod(int flag){
 	int i, j;
-	float I;
-
-    q[0]=0;
-    q[1]=0;
+	float I, A;
+	I=A=0;
+    float q[2]={0,0};
+    float x[4]={0,0,0,0};
+    float y[4]={0,0,0,0};
 
 	if(flag==TRUE){
-        for(j=0, I=0; j<7; j++)
-            for(i=0; i<4; i++) I += pesos_G_7[j]*exp(-pow(((N1/8)*(abcissas_G_7[j]+2*i+1)), 2));
+
+        for(i=0, I=0; i<4; i++){
+            for(j=0; j<7; j++){
+                I += pesos_G_7[j]*exp(-pow(((N1/8)*(abcissas_G_7[j]+2*i+1)), 2));
+            }
+            x[i]=(N1*I)/(4*sqrt(M_PI));             //cada um dos quatro G_7's
+        }
         q[0]=(N1*I)/(4*sqrt(M_PI));
-        for(j=0, I=0; j<15; j++)
-            for(i=0; i<4; i++) I += pesos_K_15[j]*exp(-pow(((N1/8)*(abcissas_K_15[j]+2*i+1)), 2));
+        for(i=0, I=0; i<4; i++){
+            for(j=0; j<15; j++){
+                I += pesos_K_15[j]*exp(-pow(((N1/8)*(abcissas_K_15[j]+2*i+1)), 2));
+            }
+            y[i]=(N1*I)/(4*sqrt(M_PI));             //cada um dos quatro K_15's
+        }
         q[1]=(N1*I)/(4*sqrt(M_PI));
+        for(i=0, A=0; i<4; i++){
+            A += pow(fabs(200*(x[i]-y[i])), 1.5);   //soma dos erros de cada uma das quatro integrais
+        }
     }
 
     else{
@@ -159,9 +175,11 @@ float gauss_kronrod(int flag, float q[2]){
         q[0]=(N1*I/sqrt(M_PI));
         for(i=0, I=0; i<15; i++) I += (pesos_K_15[i])*exp(-pow((N1/2)*(abcissas_K_15[i]+1), 2));
         q[1]=(N1*I/sqrt(M_PI));
+        A=pow(fabs(200*(q[0]-q[1])), 1.5);
     }
-
-	//printf("Erro estimado: %20.18lf \n", pow(200*fabs(g_7-k_15), 1.5));
+	printf("G_7: %40.38f\nK_15: %40.38lf\n", q[0], q[1]);
+	printf("Erro absoluto: %20.18f\n", fabs(q[1]-erf_N1));
+    printf("Erro de truncamento: %30.28f\n", A);
 }
 
 /*Refina as raizes do polinômio de Legendre
@@ -216,9 +234,23 @@ http://keisan.casio.com/exec/system/1180573449
 https://www.advanpix.com/2011/11/07/gauss-kronrod-quadrature-nodes-weights
 https://pomax.github.io/bezierinfo/legendre-gauss.html*/
 
-/*Algumas constantes que precisamos calcular no Wolfram Alpha
+/*Algumas constantes que precisamos calcular no Wolfram Alpha:
 
-d^30(exp(-pow(((0.9083010/8)*(x+2*0+1)), 2)))/dx^30 (x=-1)=-9.1486*1E-9  => R_15=−0.992981211E-49
-d^30(exp(-pow(((0.9083010/8)*(x+2*1+1)), 2)))/dx^30 (x=-1)=1.79427*1E-9 =>
-d^30(exp(-pow(((0.9083010/8)*(x+2*2+1)), 2)))/dx^30 (x=-1)=7.5953*1E-9 =>
-d^30(exp(-pow(((0.9083010/8)*(x+2*3+1)), 2)))/dx^30 (x=-1)=-4.11435*1E-9 =>
+Cálculo do erro do método de Gauss-Legendre (sem refinamento):
+d^30(exp(-pow(((0.9083010/2)*(x+1)), 2)))/dx^30 (x=-1)=-1.05476*1E10=A => R_15 = [2³¹(15!)⁴/31(30!)³]*A = 1,144827473E-31;
+
+Erro total de truncamento do método de Gauss-Legendre
+calculado separadamente da rotina devido à precisão:
+E=
+
+Cálculo do erro do método de Gauss-Legendre (refinado):
+
+d^30(exp(-pow(((0.9083010/8)*(x+2*0+1)), 2)))/dx^30 (x=-1)=-9.1486*1E-9=A  => R_15 = [2³¹(15!)⁴/31(30!)³]*A = −9,92981211E-50;
+d^30(exp(-pow(((0.9083010/8)*(x+2*1+1)), 2)))/dx^30 (x=-1)=1.79427*1E-9=A => R_15 = 1,947485295E-50;
+d^30(exp(-pow(((0.9083010/8)*(x+2*2+1)), 2)))/dx^30 (x=-1)=7.5953*1E-9=A => R_15 = 8,243873589E-50;
+d^30(exp(-pow(((0.9083010/8)*(x+2*3+1)), 2)))/dx^30 (x=-1)=-4.11435*1E-9=A => R_15 = -4,465680263E-50;
+[2³¹(15!)⁴/31(30!)³]=2,025660298×10⁵⁶/1,866294709×10⁹⁷=1,085391438E-41
+
+Erro total de truncamento do método de Gauss-Legendre
+calculado separadamente da rotina devido à precisão:
+E=(−9,92981211+1,947485295+8,243873589−4,465680263)*1E-50=−4,204133489E-50*/
