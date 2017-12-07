@@ -21,6 +21,9 @@ double A=M_PI*(pow(0.15, 2)/4); //área da seção transversa, em m2
 double rho=1.2 //densidade em kg/m3
 double M[9]={0, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3};
 double C_D[9]={1.6, 1.8, 2.1, 4.8, 5.8, 5.4, 4.8, 4.2, 3.9};
+double g=9.79 //gravidade em m/s2
+double V0=700 //velocidade inicial em m/s
+double m=50 //massa em kg
 
 /*Protótipos de funções usadas ao longo do programa*/
 double lagr_pol(double a, double b, double c, double A, double B, double C, double x);
