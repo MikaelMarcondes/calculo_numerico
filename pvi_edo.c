@@ -18,7 +18,7 @@
 
 double C_S=332; //velocidade do som, em m/s
 //double A=M_PI*(pow(0.15, 2)/4); //área da seção transversa, em m2
-double A=0; //área da seção transversa, em m2
+double A=0; //área da seção transversa, em m2, particula puntiforme
 double rho=1.2; //densidade em kg/m3
 double M[9]={0, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3};
 double C_D[9]={1.6, 1.8, 2.1, 4.8, 5.8, 5.4, 4.8, 4.2, 3.9};
@@ -63,6 +63,9 @@ int main(){
 
         fprintf(fp, "%6.4lf   %6.4lf\n", z[0], z[1]);
     }
+    /*fprintf(fp, "\nAlcance do projetil: %6.4lf m\n", z[0]);
+    fprintf(fp, "Tempo de voo: %6.4lf s\n", i*dt);
+    fprintf(fp, "Velocidade de impacto: %6.4lf m/s\n", speed(v));*/
     fclose(fp);
 }
 
