@@ -25,12 +25,13 @@ double C_D[9]={1.6, 1.8, 2.1, 4.8, 5.8, 5.4, 4.8, 4.2, 3.9};
 double g=9.79; //gravidade em m/s2
 double V0=700; //velocidade inicial em m/s
 double m=50; //massa em kg
+double dt=1E-3;
 
 /*Protótipos de funções usadas ao longo do programa*/
 double lagr_pol(double a, double b, double c, double A, double B, double C, double x);
 double drag_coefficient(double s);
 double speed(double v[2]);
-void runge_kutta_fehlberg(double v[2], int flaf, double dt);
+void runge_kutta_fehlberg(double v[2], int flag);
 double f(double v_1, int flag, double v_2);
 
 /*Programa principal*/
@@ -39,33 +40,56 @@ int main(){
     double x[2]={0,0};
 
     double a;
-    printf("Entre com o ângulo inicial (inteiro de 1 a 6):");
-    scanf("%lf",&a);
-    a *= 10*M_PI*N2/180;
-    double v[2]={V0*cos(a), V0*sin(a)};
-    double z[2]={0,0}; //vetor para guardar temporariamente as velocidades antigas
 
-    int i;
+    int i,j;
     double dt=1E-3;
 
     FILE *fp;
     fp=fopen("trajetoria.txt", "w");
+    for(j=1; j<7; j++){
+        a=j*10*M_PI*N2/180;
+        double v[2]={V0*cos(a), V0*sin(a)};
+        double z[2]={0,0}; //vetor para guardar temporariamente as velocidades antigas
 
-    if(fp == NULL)
-        exit(-1);
-    for(i=0; x[1]>=0; i++){
-        z[0]=x[0];
-        z[1]=x[1];
-        runge_kutta_fehlberg(v, TRUE, dt); //com flag=TRUE altera a primeira componente da velocidade
-        runge_kutta_fehlberg(v, FALSE, dt); //com flag=FALSE altera a segunda componente da velocidade
-        x[0] += dt*v[0];
-        x[1] += dt*v[1];
+        if(fp == NULL)
+            exit(-1);
+        for(i=0, dt=1E-3; x[1]>=0; i++){
+            z[0]=x[0];
+            z[1]=x[1];
+            runge_kutta_fehlberg(v, TRUE); //com flag=TRUE altera a primeira componente da velocidade
+            runge_kutta_fehlberg(v, FALSE); //com flag=FALSE altera a segunda componente da velocidade
+            x[0] += dt*v[0];
+            x[1] += dt*v[1];
 
-        fprintf(fp, "%6.4lf   %6.4lf\n", z[0], z[1]);
+            //fprintf(fp, "%6.4lf   %6.4lf\n", z[0], z[1]);
+        }
+        fprintf(fp, "\nAlcance do projetil: %6.4lf m\n", z[0]);
+        fprintf(fp, "Tempo de voo: %6.4lf s\n", i*dt);
+        fprintf(fp, "Velocidade de impacto: %6.4lf m/s\n", speed(v));
+        z[0]=z[1]=x[0]=x[1]=v[0]=v[1]=0;
     }
-    /*fprintf(fp, "\nAlcance do projetil: %6.4lf m\n", z[0]);
-    fprintf(fp, "Tempo de voo: %6.4lf s\n", i*dt);
-    fprintf(fp, "Velocidade de impacto: %6.4lf m/s\n", speed(v));*/
+    for(j=1, A=0; j<7; j++){
+        a=j*10*M_PI*N2/180;
+        double v[2]={V0*cos(a), V0*sin(a)};
+        double z[2]={0,0}; //vetor para guardar temporariamente as velocidades antigas
+
+        if(fp == NULL)
+            exit(-1);
+        for(i=0; x[1]>=0; i++){
+            z[0]=x[0];
+            z[1]=x[1];
+            runge_kutta_fehlberg(v, TRUE); //com flag=TRUE altera a primeira componente da velocidade
+            runge_kutta_fehlberg(v, FALSE); //com flag=FALSE altera a segunda componente da velocidade
+            x[0] += dt*v[0];
+            x[1] += dt*v[1];
+
+            //fprintf(fp, "%6.4lf   %6.4lf\n", z[0], z[1]);
+        }
+        fprintf(fp, "\nAlcance do projetil: %6.4lf m\n", z[0]);
+        fprintf(fp, "Tempo de voo: %6.4lf s\n", i*dt);
+        fprintf(fp, "Velocidade de impacto: %6.4lf m/s\n", speed(v));
+        z[0]=z[1]=x[0]=x[1]=v[0]=v[1]=0;
+    }
     fclose(fp);
 }
 
@@ -91,7 +115,7 @@ double speed(double v[2]){
     return (pow((pow(v[0], 2)+pow(v[1], 2)), 0.5));
 }
 
-void runge_kutta_fehlberg(double v[2], int flag, double dt){
+void runge_kutta_fehlberg(double v[2], int flag){
     int i=0;
     if(flag==TRUE) i=0;
     else i=1;
