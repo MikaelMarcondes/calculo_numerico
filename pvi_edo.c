@@ -17,7 +17,8 @@
 /*Variaveis globais*/
 
 double C_S=332; //velocidade do som, em m/s
-double A=M_PI*(pow(0.15, 2)/4); //área da seção transversa, em m2
+//double A=M_PI*(pow(0.15, 2)/4); //área da seção transversa, em m2
+double A=0; //área da seção transversa, em m2
 double rho=1.2; //densidade em kg/m3
 double M[9]={0, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3};
 double C_D[9]={1.6, 1.8, 2.1, 4.8, 5.8, 5.4, 4.8, 4.2, 3.9};
@@ -47,14 +48,22 @@ int main(){
     int i;
     double dt=1E-3;
 
+    FILE *fp;
+    fp=fopen("trajetoria.txt", "w");
+
+    if(fp == NULL)
+        exit(-1);
     for(i=0; x[1]>=0; i++){
-        z[0]=v[0];
-        z[1]=v[1];
+        z[0]=x[0];
+        z[1]=x[1];
         runge_kutta_fehlberg(v, TRUE, dt); //com flag=TRUE altera a primeira componente da velocidade
         runge_kutta_fehlberg(v, FALSE, dt); //com flag=FALSE altera a segunda componente da velocidade
         x[0] += dt*v[0];
         x[1] += dt*v[1];
+
+        fprintf(fp, "%6.4lf   %6.4lf\n", z[0], z[1]);
     }
+    fclose(fp);
 }
 
 double lagr_pol(double a, double b, double c, double A, double B, double C, double x){
@@ -100,5 +109,5 @@ double f(double v_1, int flag, double v_2){
     double V[2]={v_1, v_2};
     s=speed(V);
     if(flag==TRUE) return (-A*rho*drag_coefficient(s)*v_1*s/(2*m));
-    else return (-A*rho*drag_coefficient(s)*v_1*s/(2*m)-m*g);
+    else return (-A*rho*drag_coefficient(s)*v_1*s/(2*m)-g);
 }
